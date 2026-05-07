@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jastip Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       PANDUAN KUSTOMISASI — baca komentar sebelum mengubah
+       ============================================================ */
+
+    :root {
+      /* 🎨 WARNA UTAMA — ganti 2 nilai di bawah ini untuk ubah tema warna */
+      --primary: #672f90;        /* warna tombol, aktif, aksen utama */
+      --primary-dark: #672f90;   /* warna hover tombol utama */
+
+      /* 🎨 WARNA SEKUNDER (Hijau = sukses/simpan) */
+      --green: #10b981;
+      --green-dark: #059669;
+
+      /* 🎨 WARNA BAHAYA (Merah = error/reset) */
+      --red: #f43f5e;
+
+      /* 🎨 BACKGROUND HALAMAN — ganti untuk ubah warna latar */
+      --bg: #f1f5f9;
+
+      /* 🎨 WARNA KARTU HASIL (dark section bawah) */
+      --result-bg: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      /* 🎨 BACKGROUND TEXTURE — hapus baris di bawah untuk solid color */
+      background-image: radial-gradient(circle at 20% 20%, rgba(99,102,241,0.06) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(16,185,129,0.05) 0%, transparent 50%);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    /* ── CARD UTAMA ── */
+    .main-card {
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 20px 60px -10px rgba(0,0,0,0.10), 0 4px 16px -4px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header-section {
+      background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+      border-bottom: 1px solid #eef0f8;
+      padding: 28px 28px 20px;
+      text-align: center;
+    }
+
+    /* 🖼️  LOGO — ganti src di HTML (cari id="logoImg") untuk ubah logo */
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      border-radius: 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.15);
+    }
+
+    /* ── TAB NAVIGASI ── */
+    .tab-bar {
+      display: flex;
+      background: #f8fafc;
+      border-bottom: 1px solid #eef0f8;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 14px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: #fff;
+    }
+    .tab-btn i { margin-right: 6px; }
+
+    /* ── INPUT FIELDS ── */
+    .field-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      margin-left: 4px;
+    }
+    .field-input {
+      width: 100%;
+      padding: 13px 16px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #1e293b;
+      outline: none;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field-input:focus {
+      border-color: var(--primary);
+      background: #fafaff;
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.08);
+    }
+    .field-input::placeholder { color: #cbd5e1; font-weight: 500; }
+
+    /* ── AUTOCOMPLETE ── */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      z-index: 50;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .autocomplete-item:hover { background: #f1f5ff; }
+    .autocomplete-item i { color: var(--primary); font-size: 11px; }
+    .autocomplete-item:first-child { border-radius: 12px 12px 0 0; }
+    .autocomplete-item:last-child { border-radius: 0 0 12px 12px; }
+
+    /* ── ONGKIR SECTION ── */
+    .ongkir-box {
+      background: linear-gradient(135deg, #f0f4ff, #f8f9ff);
+      border: 1.5px solid #e0e7ff;
+      border-radius: 20px;
+      padding: 20px;
+    }
+    .mini-card {
+      background: #fff;
+      border: 1.5px solid #eef0f8;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .mini-input {
+      width: 100%;
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #1e293b;
+      border: none;
+      outline: none;
+      background: transparent;
+    }
+    .mini-input::placeholder { color: #cbd5e1; }
+
+    .berat-card {
+      background: #fff;
+      border: 2px solid #c7d2fe;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+    .berat-input {
+      width: 100%;
+      font-size: 32px;
+      font-weight: 900;
+      text-align: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #1e293b;
+      border: none;
+      outline: none;
+      background: transparent;
+    }
+    .berat-input::placeholder { color: #e2e8f0; }
+
+    /* ── FOTO UPLOAD ── */
+    .foto-drop {
+      border: 2px dashed #e2e8f0;
+      border-radius: 20px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .foto-drop:hover {
+      border-color: var(--primary);
+      background: #fafaff;
+    }
+    .foto-drop.has-image {
+      border-style: solid;
+      border-color: #c7d2fe;
+      background: #f8f9ff;
+      padding: 16px;
+    }
+
+    /* ── TOMBOL HITUNG ── */
+    .btn-hitung {
+      width: 100%;
+      padding: 17px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 8px 20px rgba(99,102,241,0.30);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .btn-hitung:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 12px 24px rgba(99,102,241,0.35); }
+    .btn-hitung:active { transform: translateY(0); }
+
+    /* ── RESULT SECTION ── */
+    .result-section {
+      background: var(--result-bg);
+      padding: 28px;
+      color: #fff;
+    }
+    .total-label { font-size: 10px; font-weight: 800; letter-spacing: 0.15em; color: #475569; text-transform: uppercase; }
+    .total-value { font-size: 38px; font-weight: 900; color: #34d399; line-height: 1; margin-top: 4px; }
+    .detail-chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .detail-chip-label { color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .detail-chip-val { color: #e2e8f0; font-weight: 700; font-size: 14px; margin-top: 2px; }
+
+    /* ── TOMBOL SIMPAN ── */
+    .btn-simpan {
+      width: 100%;
+      padding: 16px;
+      background: var(--green);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-simpan:hover:not(:disabled) { background: var(--green-dark); }
+    .btn-simpan:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── RIWAYAT / HISTORY ── */
+    .history-card {
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      transition: box-shadow 0.2s;
+    }
+    .history-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+    .history-foto {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    .history-foto-placeholder {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .history-total { font-size: 16px; font-weight: 800; color: var(--primary); }
+    .history-nama { font-size: 13px; font-weight: 700; color: #1e293b; }
+    .history-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+    /* ── STATUS BAR ── */
+    .sync-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      animation: pulse 2s infinite;
+    }
+    .sync-dot.green { background: #10b981; animation: none; }
+    .sync-dot.red { background: #f43f5e; animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── FLAG PREVIEW ── */
+    .flag-wrap {
+      width: 42px; height: 30px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      flex-shrink: 0;
+    }
+    .flag-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── ANIMASI ── */
+    .fade-up { animation: fadeUp 0.4s ease-out; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+
+    /* ── LOADING SKELETON ── */
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── MESSAGE BOX ── */
+    #messageBox {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 12px;
+      transition: opacity 0.5s;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+    }
+    .empty-state i { font-size: 36px; margin-bottom: 12px; display: block; }
+    .empty-state p { font-size: 13px; font-weight: 600; }
+
+    /* scrollbar tipis */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 99px; }
+  </style>
+</head>
+<body class="p-4 md:p-8 flex justify-center items-start">
+
+  <div class="main-card w-full max-w-md fade-up">
+
+    <!-- ══ HEADER ══════════════════════════════════════════════ -->
+    <div class="header-section">
+
+      <!-- 🖼️ LOGO: ganti URL src di bawah ini dengan logo kamu -->
+      <div class="logo-wrap mx-auto">
+        <img id="logoImg"
+             src="https://lh3.googleusercontent.com/d/1C1Mh0UeOSwEaVsZLYBmKj7MnyMPAo51w=s1000"
+             class="w-8 h-8 object-contain" alt="Logo">
+      </div>
+
+      <div class="flex items-center justify-center gap-1 mb-1">
+        <!-- 🏷️ NAMA APP: ganti teks di bawah ini -->
+        <h1 class="text-2xl font-black text-slate-800 tracking-tight">
+          Jastip<span style="color:var(--primary)">Calculator</span>
+        </h1>
+        <button onclick="resetForm()" title="Reset form"
+          style="margin-left:6px; padding:6px 8px; border-radius:10px; background:#f1f5f9; border:none; cursor:pointer; color:#94a3b8; transition:all 0.2s;"
+          onmouseover="this.style.background='#fee2e2';this.style.color='#f43f5e'"
+          onmouseout="this.style.background='#f1f5f9';this.style.color='#94a3b8'">
+          <i class="fa-solid fa-arrows-rotate text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Status koneksi -->
+      <div id="syncStatus" class="flex items-center justify-center gap-2">
+        <div class="sync-dot"></div>
+        <span id="syncText" style="font-size:10px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:#94a3b8;">Menghubungkan...</span>
+      </div>
+    </div>
+
+    <!-- ══ TAB NAVIGASI ═════════════════════════════════════════ -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-hitung" onclick="switchTab('hitung')">
+        <i class="fa-solid fa-calculator"></i>Hitung
+      </button>
+      <button class="tab-btn" id="tab-riwayat" onclick="switchTab('riwayat')">
+        <i class="fa-solid fa-clock-rotate-left"></i>Riwayat
+      </button>
+    </div>
+
+    <!-- ══ TAB: HITUNG ══════════════════════════════════════════ -->
+    <div id="panel-hitung" class="p-6 space-y-5">
+
+      <!-- Negara & Kategori -->
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="field-label">Negara Asal</label>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="flag-wrap" id="flagPreview">
+              <i class="fa-solid fa-globe" style="color:#cbd5e1; font-size:14px;"></i>
+            </div>
+            <select id="negara" class="field-input" onchange="updateFlag(this)" style="flex:1; cursor:pointer;">
+              <option value="">Memuat...</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Kategori Barang</label>
+          <select id="kategori" class="field-input" style="cursor:pointer;">
+            <option value="">Memuat...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Nama Produk + Autocomplete -->
+      <div>
+        <label class="field-label">Nama Produk</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="namaProduk"
+            placeholder="Ketik nama produk..."
+            class="field-input"
+            oninput="handleAutocomplete(this.value)"
+            onblur="setTimeout(()=>closeAutocomplete(),200)"
+            autocomplete="off">
+          <div class="autocomplete-list" id="autocompleteList"></div>
+        </div>
+      </div>
+
+      <!-- Harga & Kurs -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="field-label">Harga beli (mata uang asing)</label>
+          <input type="text" id="hargaBeli" placeholder="0"
+            oninput="formatCurrency(this)" class="field-input">
+        </div>
+        <div>
+          <label class="field-label">Kurs ke IDR</label>
+          <input type="text" id="kurs" placeholder="15.500"
+            oninput="formatCurrency(this)" class="field-input">
+        </div>
+      </div>
+
+      <!-- Kalkulasi Ongkir -->
+      <div class="ongkir-box">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+          <div style="background:#fff; padding:7px 9px; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+            <i class="fa-solid fa-truck-fast" style="color:var(--primary); font-size:13px;"></i>
+          </div>
+          <span style="font-size:11px; font-weight:800; color:#4f46e5; letter-spacing:0.10em; text-transform:uppercase;">Kalkulasi Ongkir</span>
+        </div>
+
+        <!-- Toggle Per Gramasi / Per Satuan -->
+        <div style="display:flex; background:#e0e7ff; border-radius:12px; padding:3px; margin-bottom:14px;">
+          <button id="btnGramasi" onclick="switchOngkir('gramasi')"
+            style="flex:1; padding:8px 0; font-size:12px; font-weight:800; border:none; border-radius:10px; cursor:pointer; transition:all 0.2s; background:var(--primary); color:#fff; font-family:'Plus Jakarta Sans',sans-serif;">
+            Per Gramasi
+          </button>
+          <button id="btnSatuan" onclick="switchOngkir('satuan')"
+            style="flex:1; padding:8px 0; font-size:12px; font-weight:800; border:none; border-radius:10px; cursor:pointer; transition:all 0.2s; background:transparent; color:#6366f1; font-family:'Plus Jakarta Sans',sans-serif;">
+            Per Satuan
+          </button>
+        </div>
+
+        <!-- Mode: Per Gramasi (default) -->
+        <div id="modeGramasi">
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div class="mini-card">
+              <div class="field-label" style="margin-left:0; margin-bottom:6px;">Gramasi Tertagih</div>
+              <input type="text" id="perGram" value="100"
+                oninput="formatCurrency(this)" class="mini-input">
+            </div>
+            <div class="mini-card">
+              <div class="field-label" style="margin-left:0; margin-bottom:6px;">Harga / Gramasi</div>
+              <input type="text" id="hargaPerGram" placeholder="25.000"
+                oninput="formatCurrency(this)" class="mini-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode: Per Satuan (flat) -->
+        <div id="modeSatuan" style="display:none;">
+          <div class="mini-card mb-3" style="margin-bottom:12px;">
+            <div class="field-label" style="margin-left:0; margin-bottom:6px;">Harga Ongkir (IDR)</div>
+            <input type="text" id="hargaOngkirFlat" placeholder="50.000"
+              oninput="formatCurrency(this)" class="mini-input">
+          </div>
+        </div>
+
+        <!-- Estimasi berat selalu tampil -->
+        <div class="berat-card">
+          <div class="field-label" style="margin-left:0; margin-bottom:6px; color:#6366f1; text-align:center;">
+            Estimasi Berat Barang (Gram)
+          </div>
+          <input type="text" id="beratBarang" placeholder="0"
+            oninput="formatCurrency(this)" class="berat-input">
+        </div>
+      </div>
+
+      <!-- Upload Foto -->
+      <div>
+        <label class="field-label">Dokumentasi Produk</label>
+        <input type="file" id="fotoBarang" accept="image/*" capture="environment"
+          class="hidden" onchange="handleImage()">
+
+        <div class="foto-drop" id="fotoDropzone"
+          onclick="document.getElementById('fotoBarang').click()">
+          <div id="uploadPlaceholder" class="flex flex-col items-center gap-2">
+            <i class="fa-solid fa-camera" style="font-size:28px; color:#cbd5e1;"></i>
+            <span style="font-size:12px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">Ambil / Pilih Foto</span>
+            <span style="font-size:11px; color:#cbd5e1;">Dikompres otomatis ke 150px</span>
+          </div>
+          <img id="imgPreview" class="hidden" style="max-height:160px; width:100%; object-fit:contain; border-radius:12px;" alt="Preview">
+        </div>
+        <div id="compressStatus" class="hidden" style="text-align:center; font-size:11px; font-weight:700; color:var(--primary); margin-top:8px; text-transform:uppercase; letter-spacing:0.06em;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Memperkecil foto...
+        </div>
+      </div>
+
+      <!-- Tombol Hitung -->
+      <button class="btn-hitung" onclick="calculateTotal()">
+        <i class="fa-solid fa-calculator" style="margin-right:8px;"></i>
+        Hitung Harga Jual
+      </button>
+    </div>
+
+    <!-- ══ RESULT SECTION ═══════════════════════════════════════ -->
+    <div id="resultContainer" class="hidden result-section fade-up">
+
+      <!-- Baris: total + breakdown -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid rgba(255,255,255,0.07); padding-bottom:20px; margin-bottom:20px;">
+        <div>
+          <div class="total-label">Total Harga Jual</div>
+          <div class="total-value" id="totalPrice">Rp 0</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:10px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.08em;">Ongkir</div>
+          <div id="shippingInfo" style="font-size:16px; font-weight:800; color:#94a3b8;">Rp 0</div>
+        </div>
+      </div>
+
+      <!-- Chip detail -->
+      <div class="grid grid-cols-3 gap-2 mb-5">
+        <div class="detail-chip">
+          <div class="detail-chip-label">Negara</div>
+          <div class="detail-chip-val" id="res-negara">-</div>
+        </div>
+        <div class="detail-chip">
+          <div class="detail-chip-label">Kategori</div>
+          <div class="detail-chip-val" id="res-kategori">-</div>
+        </div>
+        <div class="detail-chip">
+          <div class="detail-chip-label">Berat</div>
+          <div class="detail-chip-val" id="res-berat">0 gr</div>
+        </div>
+      </div>
+
+      <!-- Tombol Simpan -->
+      <button class="btn-simpan" id="saveButton" onclick="saveToSheets()">
+        <i class="fa-solid fa-database"></i>
+        Simpan ke Spreadsheet
+      </button>
+    </div>
+
+    <!-- ══ MESSAGE BOX ══════════════════════════════════════════ -->
+    <div id="messageBox" style="opacity:0;"></div>
+
+    <!-- ══ TAB: RIWAYAT ═════════════════════════════════════════ -->
+    <div id="panel-riwayat" class="hidden">
+
+      <div style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9;">
+        <span style="font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.10em;">
+          <i class="fa-solid fa-clock-rotate-left" style="margin-right:6px;"></i>50 Data Terbaru
+        </span>
+        <button onclick="loadHistory()"
+          style="font-size:11px; font-weight:700; color:var(--primary); background:#f0f4ff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer;">
+          <i class="fa-solid fa-rotate-right" style="margin-right:4px;"></i>Refresh
+        </button>
+      </div>
+
+      <div id="historyContainer" class="p-4">
+        <!-- Skeleton placeholder -->
+        <div id="historySkeleton">
+          <div style="margin-bottom:10px;">
+            <div class="skeleton" style="height:70px; border-radius:16px;"></div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div class="skeleton" style="height:70px; border-radius:16px;"></div>
+          </div>
+          <div>
+            <div class="skeleton" style="height:70px; border-radius:16px;"></div>
+          </div>
+        </div>
+        <div id="historyList" class="hidden"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-card -->
+
+  <script>
+    // ============================================================
+    // 🔧 KONFIGURASI — GANTI BARIS DI BAWAH INI
+    // ============================================================
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwZ0CP4uQFAO0pgNYL9NceSn1VibMauZYessN2sKqWpqqwmsOqydWonIVt1T5BWktJA/exec";
+    // ============================================================
+
+    let lastResult   = null;
+    let base64String = "";
+    let produkDB     = []; // database produk untuk autocomplete
+
+    // ── INIT ──────────────────────────────────────────────────
+    window.onload = () => fetchDropdownData();
+
+    async function fetchDropdownData() {
+      const dot  = document.querySelector('.sync-dot');
+      const text = document.getElementById('syncText');
+      try {
+        const res  = await fetch(scriptURL);
+        const data = await res.json();
+
+        // Isi dropdown Negara
+        const selectNegara = document.getElementById('negara');
+        selectNegara.innerHTML = '<option value="" data-iso="">Pilih Negara</option>';
+        (data.negara || []).forEach(n => {
+          const opt = document.createElement('option');
+          opt.value = n.nama;
+          opt.text  = n.nama;
+          opt.dataset.iso = n.iso.toLowerCase();
+          selectNegara.appendChild(opt);
+        });
+
+        // Isi dropdown Kategori
+        const selectKategori = document.getElementById('kategori');
+        selectKategori.innerHTML = '<option value="">Pilih Kategori</option>';
+        (data.kategori || []).forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = opt.text = k;
+          selectKategori.appendChild(opt);
+        });
+
+        // Simpan database produk untuk autocomplete
+        produkDB = data.produkList || [];
+
+        dot.classList.add('green');
+        text.textContent = 'Cloud Connected';
+        text.style.color = '#10b981';
+
+      } catch (err) {
+        dot.classList.add('red');
+        text.textContent = 'Sync Error';
+        text.style.color = '#f43f5e';
+      }
+    }
+
+    // ── TAB SWITCH ────────────────────────────────────────────
+    function switchTab(tab) {
+      const tabs   = ['hitung','riwayat'];
+      const panels = { hitung: 'panel-hitung', riwayat: 'panel-riwayat' };
+
+      tabs.forEach(t => {
+        document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+        document.getElementById(panels[t]).classList.toggle('hidden', t!==tab);
+      });
+
+      // Sembunyikan result saat switch ke riwayat
+      if (tab === 'riwayat') loadHistory();
+    }
+
+    // ── LOAD HISTORY ─────────────────────────────────────────
+    async function loadHistory() {
+      const skeleton = document.getElementById('historySkeleton');
+      const list     = document.getElementById('historyList');
+      skeleton.classList.remove('hidden');
+      list.classList.add('hidden');
+      list.innerHTML = '';
+
+      try {
+        const res  = await fetch(scriptURL + '?action=history');
+        const data = await res.json();
+        skeleton.classList.add('hidden');
+        list.classList.remove('hidden');
+
+        if (!data.history || data.history.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <i class="fa-solid fa-box-open"></i>
+              <p>Belum ada data tersimpan</p>
+            </div>`;
+          return;
+        }
+
+        data.history.forEach(item => {
+          const total = Number(item.total).toLocaleString('id-ID');
+          const foto  = item.fotoUrl
+            ? `<img src="${item.fotoUrl}" class="history-foto" alt="foto" onerror="this.style.display='none'">`
+            : `<div class="history-foto-placeholder"><i class="fa-solid fa-image" style="color:#cbd5e1;font-size:16px;"></i></div>`;
+
+          list.innerHTML += `
+            <div class="history-card">
+              <div style="display:flex; gap:12px; align-items:center;">
+                ${foto}
+                <div style="flex:1; min-width:0;">
+                  <div class="history-nama" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.nama || '-'}</div>
+                  <div class="history-meta">${item.negara || '-'} · ${item.kategori || '-'}</div>
+                  <div class="history-meta">${item.timestamp}</div>
+                </div>
+                <div style="text-align:right; flex-shrink:0;">
+                  <div class="history-total">Rp ${total}</div>
+                  <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${item.berat ? item.berat+' gr' : ''}</div>
+                </div>
+              </div>
+            </div>`;
+        });
+
+      } catch (err) {
+        skeleton.classList.add('hidden');
+        list.classList.remove('hidden');
+        list.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-circle-exclamation" style="color:#f43f5e;"></i>
+            <p>Gagal memuat riwayat</p>
+          </div>`;
+      }
+    }
+
+    // ── AUTOCOMPLETE ─────────────────────────────────────────
+    function handleAutocomplete(val) {
+      const list = document.getElementById('autocompleteList');
+      if (!val || val.length < 1) { closeAutocomplete(); return; }
+
+      const keyword = val.toLowerCase();
+      const matches = produkDB.filter(p => p.toLowerCase().includes(keyword)).slice(0, 6);
+
+      if (matches.length === 0) { closeAutocomplete(); return; }
+
+      list.innerHTML = matches.map(m => `
+        <div class="autocomplete-item" onclick="selectProduk('${m.replace(/'/g,"\\'")}')">
+          <i class="fa-solid fa-clock-rotate-left"></i>${m}
+        </div>`).join('');
+      list.classList.add('open');
+    }
+
+    function selectProduk(nama) {
+      document.getElementById('namaProduk').value = nama;
+      closeAutocomplete();
+    }
+    function closeAutocomplete() {
+      document.getElementById('autocompleteList').classList.remove('open');
+    }
+
+    // ── FLAG ─────────────────────────────────────────────────
+    function updateFlag(select) {
+      const iso = select.options[select.selectedIndex]?.dataset?.iso || "";
+      const el  = document.getElementById('flagPreview');
+      if (iso) {
+        el.innerHTML = `<img src="https://flagcdn.com/w80/${iso}.png" alt="${iso}">`;
+        el.style.borderColor = 'var(--primary)';
+      } else {
+        el.innerHTML = `<i class="fa-solid fa-globe" style="color:#cbd5e1;font-size:14px;"></i>`;
+        el.style.borderColor = '#e2e8f0';
+      }
+    }
+
+    // ── FORMAT CURRENCY ──────────────────────────────────────
+    function formatCurrency(input) {
+      const val = input.value.replace(/[^0-9]/g, '');
+      input.value = val ? new Intl.NumberFormat('id-ID').format(val) : '';
+    }
+    function cleanNumber(str) {
+      if (!str) return 0;
+      return parseFloat(str.toString().replace(/\./g, '')) || 0;
+    }
+
+    // ── HANDLE IMAGE ─────────────────────────────────────────
+    function handleImage() {
+      const file      = document.getElementById('fotoBarang').files[0];
+      const preview   = document.getElementById('imgPreview');
+      const holder    = document.getElementById('uploadPlaceholder');
+      const status    = document.getElementById('compressStatus');
+      const dropzone  = document.getElementById('fotoDropzone');
+      if (!file) return;
+
+      status.classList.remove('hidden');
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = e => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX = 150;
+          let w = img.width, h = img.height;
+          if (w > MAX) { h *= MAX/w; w = MAX; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          base64String = canvas.toDataURL('image/jpeg', 0.4);
+          preview.src = base64String;
+          preview.classList.remove('hidden');
+          holder.classList.add('hidden');
+          dropzone.classList.add('has-image');
+          status.classList.add('hidden');
+        };
+      };
+    }
+
+    // ── SWITCH MODE ONGKIR ───────────────────────────────────
+    let ongkirMode = 'gramasi';
+    function switchOngkir(mode) {
+      ongkirMode = mode;
+      document.getElementById('modeGramasi').style.display = mode === 'gramasi' ? 'block' : 'none';
+      document.getElementById('modeSatuan').style.display  = mode === 'satuan'  ? 'block' : 'none';
+      const btnG = document.getElementById('btnGramasi');
+      const btnS = document.getElementById('btnSatuan');
+      btnG.style.background = mode === 'gramasi' ? 'var(--primary)' : 'transparent';
+      btnG.style.color      = mode === 'gramasi' ? '#fff' : '#6366f1';
+      btnS.style.background = mode === 'satuan'  ? 'var(--primary)' : 'transparent';
+      btnS.style.color      = mode === 'satuan'  ? '#fff' : '#6366f1';
+    }
+
+    // ── KALKULASI ────────────────────────────────────────────
+    function calculateTotal() {
+      const kurs       = cleanNumber(document.getElementById('kurs').value);
+      const hargaValas = cleanNumber(document.getElementById('hargaBeli').value);
+      const berat      = cleanNumber(document.getElementById('beratBarang').value);
+
+      if (kurs <= 0 || hargaValas <= 0) {
+        showMessage('Mohon isi Kurs dan Harga Produk!', '#f43f5e');
+        return;
+      }
+
+      const totalBarang = kurs * hargaValas;
+      let totalOngkir = 0;
+
+      if (ongkirMode === 'gramasi') {
+        const unitGram  = cleanNumber(document.getElementById('perGram').value);
+        const hargaUnit = cleanNumber(document.getElementById('hargaPerGram').value);
+        totalOngkir = (unitGram > 0 && hargaUnit > 0 && berat > 0)
+          ? (berat / unitGram) * hargaUnit : 0;
+      } else {
+        totalOngkir = cleanNumber(document.getElementById('hargaOngkirFlat').value);
+      }
+
+      const totalFinal = totalBarang + totalOngkir;
+
+      lastResult = {
+        nama       : document.getElementById('namaProduk').value || '-',
+        negara     : document.getElementById('negara').value,
+        kategori   : document.getElementById('kategori').value,
+        kurs, hargaBeli: hargaValas,
+        beratBarang: berat,
+        biayaOngkir: Math.round(totalOngkir),
+        total      : Math.round(totalFinal),
+        foto       : base64String
+      };
+
+      document.getElementById('totalPrice').textContent   = 'Rp ' + Math.round(totalFinal).toLocaleString('id-ID');
+      document.getElementById('shippingInfo').textContent = 'Rp ' + Math.round(totalOngkir).toLocaleString('id-ID');
+      document.getElementById('res-negara').textContent   = lastResult.negara  || '-';
+      document.getElementById('res-kategori').textContent = lastResult.kategori || '-';
+      document.getElementById('res-berat').textContent    = berat ? berat + ' gr' : '0 gr';
+
+      const rc = document.getElementById('resultContainer');
+      rc.classList.remove('hidden');
+      rc.classList.add('fade-up');
+
+      // Reset tombol simpan
+      const btn = document.getElementById('saveButton');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-database"></i> Simpan ke Spreadsheet';
+      btn.style.background = 'var(--green)';
+
+      showMessage('Kalkulasi selesai!', '#10b981');
+      setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
+    }
+
+    // ── SIMPAN KE SHEETS ─────────────────────────────────────
+    async function saveToSheets() {
+      if (!lastResult) return;
+      const btn = document.getElementById('saveButton');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim data...';
+
+      const params = new URLSearchParams();
+      for (let k in lastResult) params.append(k, lastResult[k]);
+
+      try {
+        await fetch(scriptURL, { method:'POST', body:params, mode:'no-cors' });
+
+        btn.innerHTML      = '<i class="fa-solid fa-check-double"></i> Berhasil Disimpan!';
+        btn.style.background = '#334155';
+        showMessage('Data berhasil diarsipkan!', '#10b981');
+
+        // Tambah nama produk ke autocomplete lokal jika belum ada
+        const nama = lastResult.nama;
+        if (nama && nama !== '-' && !produkDB.includes(nama)) {
+          produkDB.unshift(nama);
+        }
+
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
+        btn.style.background = 'var(--red)';
+        showMessage('Koneksi gagal, coba lagi', '#f43f5e');
+      }
+    }
+
+    // ── RESET FORM ───────────────────────────────────────────
+    function resetForm() {
+      document.getElementById('negara').selectedIndex   = 0;
+      document.getElementById('kategori').selectedIndex = 0;
+      updateFlag(document.getElementById('negara'));
+      ['namaProduk','hargaBeli','kurs','beratBarang'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('perGram').value      = '100';
+      document.getElementById('hargaPerGram').value = '25.000';
+      base64String = '';
+      document.getElementById('imgPreview').classList.add('hidden');
+      document.getElementById('uploadPlaceholder').classList.remove('hidden');
+      document.getElementById('fotoDropzone').classList.remove('has-image');
+      document.getElementById('fotoBarang').value = '';
+      document.getElementById('resultContainer').classList.add('hidden');
+      lastResult = null;
+      showMessage('Form direset', '#94a3b8');
+    }
+
+    // ── SHOW MESSAGE ─────────────────────────────────────────
+    function showMessage(msg, color) {
+      const el    = document.getElementById('messageBox');
+      el.textContent    = msg;
+      el.style.color    = color;
+      el.style.opacity  = '1';
+      setTimeout(() => { el.style.opacity = '0'; }, 4000);
+    }
+  </script>
+</body>
+</html>
