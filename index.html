@@ -845,12 +845,12 @@
         img.src = e.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX = 150;
+          const MAX = 2560;
           let w = img.width, h = img.height;
           if (w > MAX) { h *= MAX/w; w = MAX; }
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          base64String = canvas.toDataURL('image/jpeg', 0.4);
+          base64String = canvas.toDataURL('image/jpeg', 0.95);
           preview.src = base64String;
           preview.classList.remove('hidden');
           holder.classList.add('hidden');
