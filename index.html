@@ -15,8 +15,8 @@
 
     :root {
       /* 🎨 WARNA UTAMA — ganti 2 nilai di bawah ini untuk ubah tema warna */
-      --primary: #672f90;        /* warna tombol, aktif, aksen utama */
-      --primary-dark: #672f90;   /* warna hover tombol utama */
+      --primary: #6366f1;        /* warna tombol, aktif, aksen utama */
+      --primary-dark: #4f46e5;   /* warna hover tombol utama */
 
       /* 🎨 WARNA SEKUNDER (Hijau = sukses/simpan) */
       --green: #10b981;
@@ -470,7 +470,7 @@
       <!-- Harga & Kurs -->
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="field-label">Harga beli (mata uang asing)</label>
+          <label class="field-label">Harga (Valas)</label>
           <input type="text" id="hargaBeli" placeholder="0"
             oninput="formatCurrency(this)" class="field-input">
         </div>
@@ -506,12 +506,12 @@
         <div id="modeGramasi">
           <div class="grid grid-cols-2 gap-3 mb-3">
             <div class="mini-card">
-              <div class="field-label" style="margin-left:0; margin-bottom:6px;">Gramasi Tertagih</div>
+              <div class="field-label" style="margin-left:0; margin-bottom:6px;">Per Satuan (gr)</div>
               <input type="text" id="perGram" value="100"
                 oninput="formatCurrency(this)" class="mini-input">
             </div>
             <div class="mini-card">
-              <div class="field-label" style="margin-left:0; margin-bottom:6px;">Harga / Gramasi</div>
+              <div class="field-label" style="margin-left:0; margin-bottom:6px;">Harga / Satuan</div>
               <input type="text" id="hargaPerGram" placeholder="25.000"
                 oninput="formatCurrency(this)" class="mini-input">
             </div>
@@ -535,6 +535,14 @@
           <input type="text" id="beratBarang" placeholder="0"
             oninput="formatCurrency(this)" class="berat-input">
         </div>
+      </div>
+
+      <!-- Satuan Produk -->
+      <div>
+        <label class="field-label">Satuan Produk</label>
+        <select id="satuanProduk" class="field-input" style="cursor:pointer;">
+          <option value="">Pilih Satuan</option>
+        </select>
       </div>
 
       <!-- Upload Foto -->
@@ -676,6 +684,15 @@
           const opt = document.createElement('option');
           opt.value = opt.text = k;
           selectKategori.appendChild(opt);
+        });
+
+        // Isi dropdown Satuan
+        const selectSatuan = document.getElementById('satuanProduk');
+        selectSatuan.innerHTML = '<option value="">Pilih Satuan</option>';
+        (data.satuan || []).forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = opt.text = s;
+          selectSatuan.appendChild(opt);
         });
 
         // Simpan database produk untuk autocomplete
@@ -888,6 +905,7 @@
         kategori   : document.getElementById('kategori').value,
         kurs, hargaBeli: hargaValas,
         beratBarang: berat,
+        satuan     : document.getElementById('satuanProduk').value || "",
         biayaOngkir: Math.round(totalOngkir),
         total      : Math.round(totalFinal),
         foto       : base64String
@@ -948,6 +966,7 @@
     function resetForm() {
       document.getElementById('negara').selectedIndex   = 0;
       document.getElementById('kategori').selectedIndex = 0;
+      document.getElementById('satuanProduk').selectedIndex = 0;
       updateFlag(document.getElementById('negara'));
       ['namaProduk','hargaBeli','kurs','beratBarang'].forEach(id => {
         document.getElementById(id).value = '';
