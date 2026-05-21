@@ -470,7 +470,7 @@
       <!-- Harga & Kurs -->
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="field-label">Harga Beli</label>
+          <label class="field-label">Harga (Valas)</label>
           <input type="text" id="hargaBeli" placeholder="0" inputmode="decimal"
             oninput="formatValas(this)" class="field-input">
         </div>
@@ -606,8 +606,8 @@
       <!-- Tax 12% -->
       <div style="background:rgba(251,191,36,0.10); border:1px solid rgba(251,191,36,0.25); border-radius:14px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <div>
-          <div style="font-size:10px; font-weight:800; letter-spacing:0.10em; text-transform:uppercase; color:#fbbf24;">Tax (12%)</div>
-          <div style="font-size:11px; color:#64748b; margin-top:2px;">dari Harga Barang × Kurs</div>
+          <div style="font-size:10px; font-weight:800; letter-spacing:0.10em; text-transform:uppercase; color:#fbbf24;">Tax (112%)</div>
+          <div style="font-size:11px; color:#64748b; margin-top:2px;">dari Harga Barang × 112% × kurs</div>
         </div>
         <div id="res-tax" style="font-size:20px; font-weight:900; color:#fbbf24;">Rp 0</div>
       </div>
@@ -927,9 +927,9 @@
         totalOngkir = cleanNumber(document.getElementById('hargaOngkirFlat').value);
       }
 
-      const subtotal   = totalBarang + totalOngkir;
-      const tax        = Math.round(subtotal * 0.12);
-      const totalFinal = Math.ceil((subtotal + tax) / 1000) * 1000;
+      const tax        = Math.round(hargaValas * 0.12 * kurs);
+      const totalBarangDenganTax = Math.round(hargaValas * 1.12 * kurs);
+      const totalFinal = Math.ceil((totalBarangDenganTax + totalOngkir) / 1000) * 1000;
 
       lastResult = {
         nama       : document.getElementById('namaProduk').value || '-',
@@ -941,6 +941,7 @@
         biayaOngkir: Math.round(totalOngkir),
         tax        : tax,
         total      : totalFinal,
+        hargaBarang: Math.round(totalBarangDenganTax),
         foto       : base64String
       };
 
