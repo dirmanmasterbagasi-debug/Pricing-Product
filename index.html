@@ -928,7 +928,7 @@
       }
 
       const totalBarangDenganTax = Math.round(hargaValas * 1.12 * kurs);
-      const totalFinal = Math.ceil((totalBarangDenganTax + totalOngkir) / 1000) * 1000;
+      const totalFinal = Math.ceil((totalBarangDenganTax + totalOngkir) / 100) * 100;
 
       lastResult = {
         nama       : document.getElementById('namaProduk').value || '-',
