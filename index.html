@@ -471,8 +471,8 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="field-label">Harga (Valas)</label>
-          <input type="number" id="hargaBeli" placeholder="0" step="0,01" min="0"
-            oninput="formatCurrency(this)" class="field-input">
+          <input type="text" id="hargaBeli" placeholder="0" inputmode="decimal"
+            oninput="formatValas(this)" class="field-input">
         </div>
         <div>
           <label class="field-label">Kurs ke IDR</label>
@@ -601,6 +601,15 @@
           <div class="detail-chip-label">Berat</div>
           <div class="detail-chip-val" id="res-berat">0 gr</div>
         </div>
+      </div>
+
+      <!-- Tax 12% -->
+      <div style="background:rgba(251,191,36,0.10); border:1px solid rgba(251,191,36,0.25); border-radius:14px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div>
+          <div style="font-size:10px; font-weight:800; letter-spacing:0.10em; text-transform:uppercase; color:#fbbf24;">Tax (12%)</div>
+          <div style="font-size:11px; color:#64748b; margin-top:2px;">dari Harga Barang × Kurs</div>
+        </div>
+        <div id="res-tax" style="font-size:20px; font-weight:900; color:#fbbf24;">Rp 0</div>
       </div>
 
       <!-- Tombol Simpan -->
@@ -828,6 +837,27 @@
       return parseFloat(str.toString().replace(/\./g, '')) || 0;
     }
 
+    // ── FORMAT VALAS (ribuan=titik, desimal=koma) ─────────────
+    function formatValas(input) {
+      let raw = input.value.replace(/[^0-9.,]/g, "");
+      const parts = raw.split(",");
+      let intPart = parts[0].replace(/\./g, "");
+      let decPart = parts.length > 1 ? parts[1] : null;
+      if (intPart) {
+        intPart = new Intl.NumberFormat("id-ID").format(parseInt(intPart) || 0);
+      }
+      if (decPart !== null) {
+        decPart = decPart.replace(/[^0-9]/g, "").slice(0, 4);
+        input.value = intPart + "," + decPart;
+      } else {
+        input.value = intPart;
+      }
+    }
+    function cleanValas(str) {
+      if (!str) return 0;
+      return parseFloat(str.toString().replace(/\./g, "").replace(",", ".")) || 0;
+    }
+
     // ── HANDLE IMAGE ─────────────────────────────────────────
     function handleImage() {
       const file      = document.getElementById('fotoBarang').files[0];
@@ -877,7 +907,7 @@
     // ── KALKULASI ────────────────────────────────────────────
     function calculateTotal() {
       const kurs       = cleanNumber(document.getElementById('kurs').value);
-      const hargaValas = cleanNumber(document.getElementById('hargaBeli').value);
+      const hargaValas = cleanValas(document.getElementById('hargaBeli').value);
       const berat      = cleanNumber(document.getElementById('beratBarang').value);
 
       if (kurs <= 0 || hargaValas <= 0) {
@@ -897,7 +927,9 @@
         totalOngkir = cleanNumber(document.getElementById('hargaOngkirFlat').value);
       }
 
-      const totalFinal = totalBarang + totalOngkir;
+      const subtotal   = totalBarang + totalOngkir;
+      const tax        = Math.round(subtotal * 0.12);
+      const totalFinal = Math.ceil((subtotal + tax) / 1000) * 1000;
 
       lastResult = {
         nama       : document.getElementById('namaProduk').value || '-',
@@ -907,15 +939,17 @@
         beratBarang: berat,
         satuan     : document.getElementById('satuanProduk').value || "",
         biayaOngkir: Math.round(totalOngkir),
-        total      : Math.round(totalFinal),
+        tax        : tax,
+        total      : totalFinal,
         foto       : base64String
       };
 
-      document.getElementById('totalPrice').textContent   = 'Rp ' + Math.round(totalFinal).toLocaleString('id-ID');
+      document.getElementById('totalPrice').textContent   = 'Rp ' + totalFinal.toLocaleString('id-ID');
       document.getElementById('shippingInfo').textContent = 'Rp ' + Math.round(totalOngkir).toLocaleString('id-ID');
       document.getElementById('res-negara').textContent   = lastResult.negara  || '-';
       document.getElementById('res-kategori').textContent = lastResult.kategori || '-';
       document.getElementById('res-berat').textContent    = berat ? berat + ' gr' : '0 gr';
+      document.getElementById('res-tax').textContent      = 'Rp ' + tax.toLocaleString('id-ID');
 
       const rc = document.getElementById('resultContainer');
       rc.classList.remove('hidden');
