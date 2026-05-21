@@ -927,7 +927,6 @@
         totalOngkir = cleanNumber(document.getElementById('hargaOngkirFlat').value);
       }
 
-      const tax        = Math.round(hargaValas * 0.12 * kurs);
       const totalBarangDenganTax = Math.round(hargaValas * 1.12 * kurs);
       const totalFinal = Math.ceil((totalBarangDenganTax + totalOngkir) / 1000) * 1000;
 
